@@ -1,10 +1,10 @@
 #data "terraform_remote_state" "innovart_vpc" {
- # backend = "s3"
-  #config = {
-   # bucket = "innovart-terraform-state"
-    #key    = "vpc/terraform.tfstate"
-    #region = "eu-west-1"
-  #}
+# backend = "s3"
+#config = {
+# bucket = "innovart-terraform-state"
+#key    = "vpc/terraform.tfstate"
+#region = "eu-west-1"
+#}
 #}
 
 resource "aws_vpc" "innovart-vpc" {
@@ -14,7 +14,7 @@ resource "aws_vpc" "innovart-vpc" {
 
 output "vpc_id" {
   value = aws_vpc.innovart-vpc.id
-  
+
 }
 
 locals {
@@ -25,21 +25,29 @@ locals {
 
 resource "aws_subnet" "priv-subnet" {
   vpc_id                  = aws_vpc.innovart-vpc.id
-  cidr_block              = "10.0.0.0/24"
+  cidr_block              = "10.0.6.0/23"
   availability_zone       = "eu-west-1a"
   map_public_ip_on_launch = true
 
-  tags = local.vpc_tags
+  tags = {
+    "Name"                            = "innovart-priv-subnet"
+    "kubernetes.io/cluster/innovart-vpc" = "shared"
+    "kubernetes.io/role/internal-elb" = "1"
+  }
 }
 
 
 resource "aws_subnet" "pub-subnet" {
   vpc_id                  = aws_vpc.innovart-vpc.id
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = "10.0.4.0/23"
   availability_zone       = "eu-west-1b"
   map_public_ip_on_launch = true
 
-  tags = local.vpc_tags
+  tags = {
+    "Name"                            = "innovart-pub-subnet"
+    "kubernetes.io/cluster/innovart-vpc" = "shared"
+    "kubernetes.io/role/elb"          = "1"
+  }
 }
 
 
