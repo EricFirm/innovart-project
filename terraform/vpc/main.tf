@@ -1,6 +1,20 @@
+#data "terraform_remote_state" "innovart_vpc" {
+ # backend = "s3"
+  #config = {
+   # bucket = "innovart-terraform-state"
+    #key    = "vpc/terraform.tfstate"
+    #region = "eu-west-1"
+  #}
+#}
+
 resource "aws_vpc" "innovart-vpc" {
   cidr_block           = var.cidr_block
   enable_dns_hostnames = true
+}
+
+output "vpc_id" {
+  value = aws_vpc.innovart-vpc.id
+  
 }
 
 locals {
@@ -18,9 +32,6 @@ resource "aws_subnet" "priv-subnet" {
   tags = local.vpc_tags
 }
 
-output "priv_subnet_id" {
-  value = aws_subnet.priv-subnet.id
-}
 
 resource "aws_subnet" "pub-subnet" {
   vpc_id                  = aws_vpc.innovart-vpc.id
@@ -31,9 +42,6 @@ resource "aws_subnet" "pub-subnet" {
   tags = local.vpc_tags
 }
 
-output "pub_subnet_id" {
-  value = aws_subnet.pub-subnet.id
-}
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.innovart-vpc.id
@@ -51,7 +59,7 @@ resource "aws_route_table" "pub-rt" {
   vpc_id = aws_vpc.innovart-vpc.id
 
   route {
-    cidr_block = "0.0.0.0.0/0"
+    cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
   tags = {

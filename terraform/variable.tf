@@ -1,15 +1,3 @@
-variable "eks_version" {
-  description = "The EKS version"
-  type        = string
-  default     = "1.32"
-}
-
-variable "cluster_name" {
-  description = "The EKS cluster Name"
-  type        = string
-  default     = "innovart-eks-cluster"
-}
-
 variable "vpc_pub_subnet_id" {
   description = "The VPC Public Subnet ID"
   type        = string
@@ -23,4 +11,10 @@ variable "vpc_priv_subnet_id" {
 variable "vpc_id" {
   description = "The VPC ID"
   type        = string
+}
+
+variable "region" {
+  description = "The AWS region"
+  type        = string
+  default     = "eu-west-1"
 }

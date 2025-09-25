@@ -1,57 +1,89 @@
-data "terraform_remote_state" "innovart-vpc" {
-    backend = "local"
-    config = {
-      path = "../vpc/terraform.tfstate"
-    }
-  
-}
+
 
 resource "aws_iam_role" "innovart-eks-cluster-role" {
-    name = "innovart-eks-cluster-role"
-    assume_role_policy = jsonencode({
-        Version = "2012-10-17"
-        Statement = [
-            {
-                Action = "sts:AssumeRole"
-                Effect = "Allow"
-                Principal = {
-                    Service = "eks.amazonaws.com"
-                }
-            },
+  name = "innovart-eks-cluster-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "innovart-eks-cluster-policy" {
+  name        = "innovart-eks-cluster-policy"
+  description = "Policy for EKS Cluster"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:Describe*",
+          "eks:*"
         ]
-    })
+        Resource = "*"
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "innovart-eks-cluster-policy" {
-    policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-    role = "aws_iam_role.innovart-eks-cluster-role"
+  policy_arn = aws_iam_policy.innovart-eks-cluster-policy.arn
+  role       = aws_iam_role.innovart-eks-cluster-role.name
 }
 
-resource "aws_eks_cluster" "innovart-eks-cluster" {
-    name     = var.cluster_name
-    role_arn = aws_iam_role.innovart-eks-cluster-role.arn
+#resource "aws_eks_cluster" "innovart-eks-cluster" {
+ # name     = "innovart-eks-cluster"
+  #role_arn = aws_iam_role.innovart-eks-cluster-role.arn
+  #version  = "1.32"
 
-    vpc_config {
-        endpoint_private_access = true
-        endpoint_public_access  = true
-        subnet_ids = concat(
-            [data.terraform_remote_state.innovart-vpc.outputs.pub_subnet_id],
-            [data.terraform_remote_state.innovart-vpc.outputs.priv_subnet_id]
-        )  
-    }
+data "aws_eks_cluster" "innovart-eks-cluster" {
+  name = "innovart-eks-cluster"
+}
 
-    access_config {
-      authentication_mode = "API"
-      bootstrap_cluster_creator_admin_permissions = true
-    }
+ # vpc_config {
+  #  endpoint_private_access = true
+   # endpoint_public_access  = true
+    #subnet_ids = concat(
+     # [var.vpc_pub_subnet_id],
+      #[var.vpc_priv_subnet_id]
+    #)
+  #}
 
-    bootstrap_self_managed_addons = true
-    version = var.eks_version
-    upgrade_policy {
-      support_type = "STANDARD"
-    }
+  #access_config {
+   # authentication_mode                         = "API"
+    #bootstrap_cluster_creator_admin_permissions = true
+  #}
 
-    depends_on = [
-        aws_iam_role_policy_attachment.innovart-eks-cluster-policy
-    ]
+  #upgrade_policy {
+   # support_type = "STANDARD"
+  #}
+
+ # depends_on = [
+  #  aws_iam_role_policy_attachment.innovart-eks-cluster-policy
+  #]
+#}
+
+data "aws_eks_cluster_auth" "innovart-eks-cluster" {
+  name = data.aws_eks_cluster.innovart-eks-cluster.name
+}
+
+output "cluster_endpoint" {
+  value = data.aws_eks_cluster.innovart-eks-cluster.endpoint
+}
+
+output "cluster_certificate_authority" {
+  value = data.aws_eks_cluster.innovart-eks-cluster.certificate_authority[0].data
+}
+
+output "cluster_name" {
+  value = data.aws_eks_cluster.innovart-eks-cluster.name
 }

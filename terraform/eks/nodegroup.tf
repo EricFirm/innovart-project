@@ -31,30 +31,36 @@ resource "aws_iam_role_policy_attachment" "innovart-eks-registry-policy" {
   role       = aws_iam_role.innovart-eks-nodegroup-role.name
 }
 
-resource "aws_eks_node_group" "innovart-eks-nodegroup" {
-  cluster_name    = var.cluster_name
+#resource "aws_eks_node_group" "innovart-eks-nodegroup" {
+ # cluster_name    = data.aws_eks_cluster.innovart-eks-cluster.name
+  #node_group_name = "innovart-eks-nodegroup"
+  #node_role_arn   = aws_iam_role.innovart-eks-nodegroup-role.arn
+
+  #subnet_ids = [
+   # var.vpc_pub_subnet_id,
+   # var.vpc_priv_subnet_id
+  #]
+
+  #scaling_config {
+   # desired_size = 2
+    #max_size     = 3
+    #min_size     = 1
+  #}
+
+  #instance_types = ["t2.micro"]
+
+  #ami_type = "AL2_x86_64"
+
+  #disk_size = 5
+
+  #depends_on = [
+   # aws_iam_role_policy_attachment.innovart-eks-nodegroup-policy,
+    #aws_iam_role_policy_attachment.innovart-eks-cni-policy,
+    #aws_iam_role_policy_attachment.innovart-eks-registry-policy,
+  #]
+#}
+
+data "aws_eks_node_group" "innovart-eks-nodegroup" {
+  cluster_name = data.aws_eks_cluster.innovart-eks-cluster.name
   node_group_name = "innovart-eks-nodegroup"
-  node_role_arn   = aws_iam_role.innovart-eks-nodegroup-role.arn
-  subnet_ids = concat(
-    [data.terraform_remote_state.innovart-vpc.outputs.pub_subnet_id],
-    [data.terraform_remote_state.innovart-vpc.outputs.priv_subnet_id]
-  )
-
-  scaling_config {
-    desired_size = 2
-    max_size     = 3
-    min_size     = 1
-  }
-
-  instance_types = ["t2.micro"]
-
-  ami_type = "AL2_x86_64"
-
-  disk_size = 5
-
-  depends_on = [
-    aws_iam_role_policy_attachment.innovart-eks-nodegroup-policy,
-    aws_iam_role_policy_attachment.innovart-eks-cni-policy,
-    aws_iam_role_policy_attachment.innovart-eks-registry-policy,
-  ]
-}
+} 
