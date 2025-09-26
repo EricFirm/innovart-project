@@ -1,5 +1,12 @@
 resource "aws_iam_user" "developer" {
   name = "developer"
+  force_destroy = true
+}
+
+resource "aws_iam_user_login_profile" "developer-console" {
+  user    = aws_iam_user.developer.name
+  password_reset_required = true
+  password_length = 16
 }
 
 resource "aws_iam_access_key" "developer" {
@@ -77,6 +84,24 @@ data "aws_eks_cluster" "innovart-eks-cluster" {
 
 data "aws_eks_cluster_auth" "innovart-eks-cluster" {
   name = data.aws_eks_cluster.innovart-eks-cluster.name
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.innovart-eks-cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.innovart-eks-cluster.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.innovart-eks-cluster.token
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", data.aws_eks_cluster.innovart-eks-cluster.name]
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
+output "aws_console_signin_url" {
+  value = "https://${data.aws_caller_identity.current.account_id}.signin.aws.amazon.com/console"
 }
 
 #data "terraform_remote_state" "innovart_vpc" {
